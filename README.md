@@ -1,0 +1,2 @@
+## Secret santa
+A website that allows you to organize Secret Santa gift exchanges. Create events, invite participants, and maintain secrecy until the big reveal. With wishlist features and a user-friendly interface, it simplifies the gift exchange process for a seamless and enjoyable experience.
