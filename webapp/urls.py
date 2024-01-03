@@ -1,6 +1,6 @@
 from django.urls import path
-from webapp import views
+from webapp.api import register
 
 urlpatterns = [
-    path('register/', views.register, name='webapp-register'),
+    path('register/email', register.email, name='webapp-register-email'),
 ]
