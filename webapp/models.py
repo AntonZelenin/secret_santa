@@ -5,6 +5,7 @@ from django.db import models
 class TmpUser(models.Model):
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128, null=True)
+    username = models.CharField(max_length=128, null=True)
     # google_id = models.CharField(max_length=128, null=True)
     # google_token = models.CharField(max_length=128, null=True)
     # google_refresh_token = models.CharField(max_length=128, null=True)
@@ -23,4 +24,5 @@ class EmailVerificationCode(models.Model):
     code = models.CharField(max_length=6, unique=True)
     email = models.EmailField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    resend_at = models.DateTimeField(null=True)
     expires_at = models.DateTimeField(null=True)

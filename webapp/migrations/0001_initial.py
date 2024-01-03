@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             name='TmpUser',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('email', models.EmailField(max_length=254, unique=True)),
+                ('registration', models.EmailField(max_length=254, unique=True)),
                 ('password', models.CharField(max_length=128, null=True)),
                 ('email_verified', models.BooleanField(default=False)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),

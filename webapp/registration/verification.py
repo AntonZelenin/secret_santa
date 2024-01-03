@@ -1,9 +1,9 @@
-from webapp.email import sender
+from webapp.registration import sender
 
 
 def send_verification_code(email: str, code: str):
     sender.send_email()
-    # raise VerificationEmailSendingException('failed to send verification email')
+    # raise VerificationEmailSendingException('failed to send verification registration')
 
 
 class VerificationEmailSendingException(Exception):

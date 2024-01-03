@@ -7,8 +7,8 @@ def send_email():
     # Email configuration
     # sender_email = 'your_email@gmail.com'
     # receiver_email = 'ntnzelenin@gmail.com'
-    # subject = 'Testing sending email from python'
-    # body = 'Body of the email'
+    # subject = 'Testing sending registration from python'
+    # body = 'Body of the registration'
     #
     # # Email server configuration (for Gmail)
     # smtp_server = 'smtp.gmail.com'
