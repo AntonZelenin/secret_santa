@@ -23,6 +23,6 @@ class TmpUser(models.Model):
 class EmailVerificationCode(models.Model):
     code = models.CharField(max_length=6, unique=True)
     email = models.EmailField(unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    resend_at = models.DateTimeField(null=True)
-    expires_at = models.DateTimeField(null=True)
+    created_at = models.DateTimeField()
+    resend_at = models.DateTimeField()
+    expires_at = models.DateTimeField()

@@ -1,3 +1,14 @@
-import time
+from typing import List
 
-MAX_RETRIES = 3
+from tools.types import Err, Ok
+
+
+def foo():
+    return Err('foo')
+
+
+match foo():
+    case Err(error):
+        print(error)
+    case Ok():
+        print('ok')
