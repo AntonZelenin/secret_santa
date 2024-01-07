@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.http import HttpRequest, JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.decorators import action
+from django.views.decorators.http import require_POST
 
 from tools import helpers
 from tools.types import Ok, Err, ErrJsonResponse
@@ -11,10 +11,9 @@ from webapp import registration, repository
 from webapp.models import User, SetUsernameToken
 
 
-# todo why get works?
-# todo remove csrf_exempt
+# todo why csrf_exempt, remove?
 @csrf_exempt
-@action(detail=True, methods=['POST'])
+@require_POST
 def email(request: HttpRequest) -> HttpResponse:
     """
     Creates a tmp user with an email and sends a verification code to the email
@@ -37,7 +36,7 @@ def email(request: HttpRequest) -> HttpResponse:
 
 
 @csrf_exempt
-@action(detail=True, methods=['POST'])
+@require_POST
 def verify_email(request: HttpRequest) -> JsonResponse:
     json_data = helpers.load_json(request)
     email_ = json_data['email']
@@ -55,7 +54,7 @@ def verify_email(request: HttpRequest) -> JsonResponse:
             return ErrJsonResponse(error, status=400)
 
 
-@action(detail=True, methods=['POST'])
+@require_POST
 def resend_email_verification_code(request: HttpRequest) -> HttpResponse:
     json_data = helpers.load_json(request)
     email_ = json_data['email']
@@ -69,7 +68,7 @@ def resend_email_verification_code(request: HttpRequest) -> HttpResponse:
 
 
 @csrf_exempt
-@action(detail=True, methods=['POST'])
+@require_POST
 def password(request: HttpRequest) -> JsonResponse:
     json_data = helpers.load_json(request)
     email_ = json_data['email']
@@ -93,7 +92,7 @@ def password(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-@action(detail=True, methods=['POST'])
+@require_POST
 def username(request: HttpRequest) -> HttpResponse:
     json_data = helpers.load_json(request)
     email_ = json_data['email']
