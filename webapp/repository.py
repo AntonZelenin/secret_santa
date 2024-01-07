@@ -1,10 +1,10 @@
 from typing import Optional
 
-from webapp.models import TmpUser
+from webapp.models import User
 
 
-def get_tmp_user_by_email(email: str) -> Optional[TmpUser]:
+def get_user_by_email(email: str) -> Optional[User]:
     try:
-        return TmpUser.objects.get(email=email)
-    except TmpUser.DoesNotExist:
+        return User.objects.get(email=email)
+    except User.DoesNotExist:
         return None

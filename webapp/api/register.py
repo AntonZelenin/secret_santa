@@ -1,4 +1,3 @@
-from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -9,9 +8,10 @@ from rest_framework.decorators import action
 from tools import helpers
 from tools.types import Ok, Err, ErrJsonResponse
 from webapp import registration, repository
-from webapp.models import TmpUser
+from webapp.models import User, SetUsernameToken
 
 
+# todo why get works?
 # todo remove csrf_exempt
 @csrf_exempt
 @action(detail=True, methods=['POST'])
@@ -29,7 +29,7 @@ def email(request: HttpRequest) -> HttpResponse:
         return ErrJsonResponse(e.messages, status=400)
 
     try:
-        registration.manager.register_email(email_)
+        registration.manager.create_user(email_)
     except registration.manager.EmailRegistrationException as e:
         return ErrJsonResponse(str(e), status=500)
 
@@ -45,12 +45,12 @@ def verify_email(request: HttpRequest) -> JsonResponse:
 
     match registration.manager.check_code(email_, code):
         case Ok():
+            registration.manager.delete_email_verification_code(email_)
             registration.manager.mark_email_as_verified(email_)
-            body = {
-                'create_password_token': default_token_generator.make_token(TmpUser.objects.get(email=email_)),
-            }
-            u = User
-            return JsonResponse(body)
+
+            return JsonResponse({
+                'create_password_token': default_token_generator.make_token(User.objects.get(email=email_)),
+            })
         case Err(error):
             return ErrJsonResponse(error, status=400)
 
@@ -61,52 +61,58 @@ def resend_email_verification_code(request: HttpRequest) -> HttpResponse:
     email_ = json_data['email']
 
     try:
-        registration.manager.register_email(email_)
+        registration.manager.create_user(email_)
     except registration.manager.EmailRegistrationException as e:
         return ErrJsonResponse(str(e), status=500)
 
     return HttpResponse(status=200)
 
 
+@csrf_exempt
 @action(detail=True, methods=['POST'])
 def password(request: HttpRequest) -> JsonResponse:
     json_data = helpers.load_json(request)
     email_ = json_data['email']
     password_ = json_data['password']
     create_password_token = json_data['create_password_token']
-    user = repository.get_tmp_user_by_email(email_)
+    user = repository.get_user_by_email(email_)
 
     if user is None:
         return ErrJsonResponse('Invalid email', status=400)
 
-    if not default_token_generator.check_token(user.id, create_password_token):
+    if not default_token_generator.check_token(user, create_password_token):
         # todo what is a good message?
         return ErrJsonResponse('Invalid password reset token', status=400)
 
+    # todo it doesn't hash the password!
     registration.manager.set_password(email_, password_)
 
     return JsonResponse({
-        'create_username_token': default_token_generator.make_token(user),
+        'create_username_token': registration.manager.create_set_username_token(email_).token,
     })
 
 
+@csrf_exempt
 @action(detail=True, methods=['POST'])
 def username(request: HttpRequest) -> HttpResponse:
     json_data = helpers.load_json(request)
     email_ = json_data['email']
     username_ = json_data['username']
     create_username_token = json_data['create_username_token']
-    user = TmpUser.objects.get(email=email_)
+    user = User.objects.get(email=email_)
+    set_username_token = SetUsernameToken.objects.get(user=user)
 
-    if not default_token_generator.check_token(user.id, create_username_token):
+    if create_username_token == set_username_token.token:
+        set_username_token.delete()
+    else:
         # todo what is a good message?
-        return ErrJsonResponse('Invalid username reset token', status=400)
+        return ErrJsonResponse('Invalid create_username_token', status=400)
 
     user.username = username_
+    user.finished_registration = True
     user.save()
 
     return HttpResponse(status=200)
-
 
 ## what about dos attacks? how to prevent sending spam to random emails? by ip?
 ## minimum time between sending subsequent registration with code, expiration time of a code
