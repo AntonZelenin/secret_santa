@@ -1,6 +1,8 @@
 from datetime import timedelta, datetime, timezone
 from typing import Optional
 
+from django.contrib.auth.hashers import make_password
+
 import tools.helpers
 from tools.types import Result, Ok, Err
 from webapp.models import User, EmailVerificationCode, SetUsernameToken
@@ -82,7 +84,7 @@ def mark_email_as_verified(email: str):
 
 def set_password(email: str, password: str):
     user = User.objects.get(email=email)
-    user.password = password
+    user.password = make_password(password)
     user.save()
 
 
