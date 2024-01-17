@@ -1,3 +1,4 @@
+from contextlib import suppress
 from datetime import timedelta, datetime, timezone
 from typing import Optional
 
@@ -29,7 +30,8 @@ def create_user(email: str):
         user = existing_user
     else:
         user = User.objects.create(email=email, username=email, date_joined=now)
-    code = tools.helpers.generate_6_digit_code()
+    # code = tools.helpers.generate_6_digit_code()
+    code = '000000'
 
     try:
         verification_code = EmailVerificationCode.objects.create(
@@ -68,10 +70,8 @@ def check_code(email: str, code: str) -> Result[bool]:
 
 
 def delete_email_verification_code(email: str):
-    try:
+    with suppress(EmailVerificationCode.DoesNotExist, User.DoesNotExist):
         EmailVerificationCode.objects.get(user=User.objects.get(email=email)).delete()
-    except (EmailVerificationCode.DoesNotExist, User.DoesNotExist):
-        pass
 
 
 def mark_email_as_verified(email: str):

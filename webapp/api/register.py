@@ -30,7 +30,7 @@ def email(request: HttpRequest) -> HttpResponse:
     try:
         registration.manager.create_user(email_)
     except registration.manager.EmailRegistrationException as e:
-        return ErrJsonResponse(str(e), status=500)
+        return ErrJsonResponse(str(e), status=400)
 
     return HttpResponse(status=200)
 
@@ -62,7 +62,7 @@ def resend_email_verification_code(request: HttpRequest) -> HttpResponse:
     try:
         registration.manager.create_user(email_)
     except registration.manager.EmailRegistrationException as e:
-        return ErrJsonResponse(str(e), status=500)
+        return ErrJsonResponse(str(e), status=400)
 
     return HttpResponse(status=200)
 
