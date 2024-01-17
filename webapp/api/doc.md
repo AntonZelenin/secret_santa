@@ -1,9 +1,9 @@
 Contents:
-- [/api/register/email](#api-register-email)
-- [/api/register/email/resend-verification-code](#api-register-email-resend-verification-code)
-- [/api/register/email-verification-code](#api-register-email-verification-code)
-- [/api/register/password](#api-register-password)
-- [/api/register/username](#api-register-username)
+- [/api/register/email](#apiregisteremail)
+- [/api/register/email/resend-verification-code](#apiregisteremailresendverificationcode)
+- [/api/register/email-verification-code](#apiregisteremailverificationcode)
+- [/api/register/password](#apiregisterpassword)
+- [/api/register/username](#apiregisterusername)
 
 ## /api/register/email
 
