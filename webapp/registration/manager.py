@@ -1,3 +1,4 @@
+import logging
 from contextlib import suppress
 from datetime import timedelta, datetime, timezone
 from typing import Optional
@@ -6,6 +7,8 @@ import tools.helpers
 from tools.types import Result, Ok, Err
 from webapp.models import User, EmailVerificationCode, SetUsernameToken
 from webapp import registration, repository
+
+logger_ = logging.getLogger(__name__)
 
 
 def create_user(email: str):
@@ -41,7 +44,9 @@ def create_user(email: str):
             resend_at=now + timedelta(minutes=1),
             expires_at=now + timedelta(minutes=10),
         )
-    except Exception:
+    except Exception as e:
+        logger_.error(e)
+
         user.delete()
         # todo users should no get such a message
         raise EmailRegistrationException('Failed to save the verification code')

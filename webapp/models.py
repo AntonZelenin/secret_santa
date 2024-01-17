@@ -21,7 +21,9 @@ class User(AbstractUser):
 # todo delete used codes
 class EmailVerificationCode(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    code = models.CharField(max_length=6, unique=True)
+    # todo
+    # code = models.CharField(max_length=6, unique=True)
+    code = models.CharField(max_length=6)
     created_at = models.DateTimeField()
     resend_at = models.DateTimeField()
     expires_at = models.DateTimeField()
