@@ -1,7 +1,7 @@
 Contents:
 - [/api/register/email](#apiregisteremail)
-- [/api/register/email/resend-verification-code](#apiregisteremailresendverificationcode)
-- [/api/register/email-verification-code](#apiregisteremailverificationcode)
+- [/api/register/email/resend-verification-code](#apiregisteremailresend-verification-code)
+- [/api/register/email-verification-code](#apiregisteremail-verification-code)
 - [/api/register/password](#apiregisterpassword)
 - [/api/register/username](#apiregisterusername)
 
