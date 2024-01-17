@@ -40,7 +40,7 @@ def email(request: HttpRequest) -> HttpResponse:
 def verify_email(request: HttpRequest) -> JsonResponse:
     json_data = helpers.load_json(request)
     email_ = json_data['email']
-    code = json_data['code']
+    code = json_data['verification_code']
 
     match registration.manager.check_code(email_, code):
         case Ok():
