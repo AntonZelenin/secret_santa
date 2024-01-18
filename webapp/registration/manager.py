@@ -40,7 +40,8 @@ def create_user(email: str):
             user=user,
             code=code,
             created_at=now,
-            resend_at=now + timedelta(minutes=1),
+            # todo change to 1 minute
+            resend_at=now + timedelta(seconds=10),
             expires_at=now + timedelta(minutes=10),
         )
     except Exception as e:
