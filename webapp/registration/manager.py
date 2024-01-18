@@ -11,9 +11,8 @@ from webapp import registration, repository
 logger_ = logging.getLogger(__name__)
 
 
-def create_user(email: str):
+def create_user(email: str) -> User:
     if _is_user_already_registered(email):
-        # todo what should be the error message?
         raise EmailRegistrationException(
             'This email is already registered. Please use a different email address or sign in'
         )
@@ -25,7 +24,6 @@ def create_user(email: str):
             if existing_code.resend_at < datetime.now(timezone.utc):
                 existing_code.delete()
             else:
-                # todo what should be the error message?
                 raise EmailRegistrationException('Please try in a minute')
 
     now = datetime.now(timezone.utc)
@@ -58,11 +56,13 @@ def create_user(email: str):
         verification_code.delete()
         raise EmailRegistrationException(e)
 
+    return user
 
-def check_code(email: str, code: str) -> Result[bool]:
+
+def check_code(user_id: int, code: str) -> Result[bool]:
     # todo prevent brute force attacks
     try:
-        user = User.objects.get(email=email)
+        user = User.objects.get(id=user_id)
         code_obj = EmailVerificationCode.objects.get(user=user)
         # todo
         # if code_obj.code == code:
@@ -77,25 +77,25 @@ def check_code(email: str, code: str) -> Result[bool]:
         return Err('Invalid code')
 
 
-def delete_email_verification_code(email: str):
+def delete_email_verification_code(user_id: int):
     with suppress(EmailVerificationCode.DoesNotExist, User.DoesNotExist):
-        EmailVerificationCode.objects.get(user=User.objects.get(email=email)).delete()
+        EmailVerificationCode.objects.get(user=User.objects.get(id=user_id)).delete()
 
 
-def mark_email_as_verified(email: str):
-    user = User.objects.get(email=email)
+def mark_email_as_verified(user_id: int):
+    user = User.objects.get(id=user_id)
     user.email_verified = True
     user.save()
 
 
-def set_password(email: str, password: str):
-    user = User.objects.get(email=email)
+def set_password(user_id: int, password: str):
+    user = User.objects.get(id=user_id)
     user.set_password(password)
     user.save()
 
 
-def create_set_username_token(email: str) -> SetUsernameToken:
-    user = User.objects.get(email=email)
+def create_set_username_token(user_id: int) -> SetUsernameToken:
+    user = User.objects.get(id=user_id)
     now = datetime.now(timezone.utc)
 
     set_username_token = SetUsernameToken(
@@ -122,6 +122,19 @@ def _is_user_already_registered(email: str) -> bool:
         return user.finished_registration
     except User.DoesNotExist:
         return False
+
+
+def get_next_step(current_step: str) -> Optional[str]:
+    if current_step == registration.constants.RESEND_VERIFICATION_CODE:
+        return registration.constants.VERIFY_EMAIL
+
+    steps = registration.constants.REGISTRATION_STEPS
+    curr_step_idx = steps.index(current_step)
+
+    if curr_step_idx == len(steps) - 1:
+        return None
+
+    return steps[curr_step_idx + 1]
 
 
 class EmailRegistrationException(Exception):

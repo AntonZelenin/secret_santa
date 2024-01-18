@@ -6,17 +6,17 @@ class EmailSerializer(serializers.Serializer):
 
 
 class EmailVerificationCodeSerializer(serializers.Serializer):
-    email = serializers.EmailField(max_length=254)
+    user_id = serializers.IntegerField()
     verification_code = serializers.CharField()
 
 
-class EmailPasswordSerializer(serializers.Serializer):
-    email = serializers.EmailField(max_length=254)
+class CreatePasswordSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
     password = serializers.CharField(max_length=128)
     create_password_token = serializers.CharField()
 
 
-class EmailUsernameSerializer(serializers.Serializer):
-    email = serializers.EmailField(max_length=254)
+class CreateUsernameSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
     username = serializers.CharField(max_length=150)
     create_username_token = serializers.CharField()
