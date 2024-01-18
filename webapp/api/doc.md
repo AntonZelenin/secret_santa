@@ -28,7 +28,7 @@ HTTP status code 200
 HTTP status code 400
 ```json
 {
-    "error": "string"
+    "error": "object"
 }
 ```
 
@@ -55,7 +55,7 @@ HTTP status code 200
 HTTP status code 400
 ```json
 {
-    "error": "string"
+    "error": "object"
 }
 ```
 
@@ -86,7 +86,7 @@ HTTP status code 200
 HTTP status code 400
 ```json
 {
-    "error": "string"
+    "error": "object"
 }
 ```
 
@@ -116,7 +116,7 @@ HTTP status code 200
 HTTP status code 400
 ```json
 {
-    "error": "string"
+    "error": "object"
 }
 ```
 
@@ -143,6 +143,6 @@ HTTP status code 200
 HTTP status code 400
 ```json
 {
-    "error": "string"
+    "error": "object"
 }
 ```
