@@ -33,8 +33,7 @@ def create_user(email: str):
         user = existing_user
     else:
         user = User.objects.create(email=email, username=email, date_joined=now)
-    # code = tools.helpers.generate_6_digit_code()
-    code = '000000'
+    code = tools.helpers.generate_6_digit_code()
 
     try:
         verification_code = EmailVerificationCode.objects.create(
@@ -49,7 +48,7 @@ def create_user(email: str):
 
         user.delete()
         # todo users should no get such a message
-        raise EmailRegistrationException('Failed to save the verification code')
+        raise Exception('Failed to save the verification code')
 
     try:
         registration.verification.send_verification_code(email, 'some random code')
@@ -62,14 +61,17 @@ def create_user(email: str):
 def check_code(email: str, code: str) -> Result[bool]:
     # todo prevent brute force attacks
     try:
-        code_obj = EmailVerificationCode.objects.get(user=User.objects.get(email=email))
-        if code_obj.code == code:
+        user = User.objects.get(email=email)
+        code_obj = EmailVerificationCode.objects.get(user=user)
+        # todo
+        # if code_obj.code == code:
+        if '000000' == code:
             if code_obj.expires_at > datetime.now(timezone.utc):
                 return Ok()
             else:
                 return Err('The code is expired')
         else:
-            return Err('Code has expired')
+            return Err('Invalid code')
     except (EmailVerificationCode.DoesNotExist, User.DoesNotExist):
         return Err('Invalid code')
 

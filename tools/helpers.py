@@ -4,7 +4,11 @@ import random
 from django.http import HttpRequest
 
 
+# todo delete?
 def load_json(request: HttpRequest) -> dict | list:
+    if not request.body:
+        return {}
+
     raw_json = request.body.decode('utf-8')
     return json.loads(raw_json)
 
