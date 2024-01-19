@@ -7,6 +7,7 @@ from tools import helpers
 from tools.types import Ok, Err, ErrJsonResponse
 from webapp import registration, repository, serializers as srl
 from webapp.models import User, SetUsernameToken
+from webapp.registration.manager import EmailRegistrationException, VerificationCodeException
 
 
 # todo why csrf_exempt, remove?
@@ -26,7 +27,7 @@ def email(request: HttpRequest) -> HttpResponse:
 
     try:
         user = registration.manager.create_user(email_)
-    except registration.manager.EmailRegistrationException as e:
+    except (EmailRegistrationException, VerificationCodeException) as e:
         return ErrJsonResponse(str(e), status=400)
 
     return JsonResponse({
@@ -74,7 +75,7 @@ def resend_email_verification_code(request: HttpRequest) -> HttpResponse:
 
     try:
         registration.manager.resend_verification_code(user_id)
-    except registration.manager.EmailRegistrationException as e:
+    except (EmailRegistrationException, VerificationCodeException) as e:
         return ErrJsonResponse({'verification_code': str(e)}, status=400)
 
     return JsonResponse({

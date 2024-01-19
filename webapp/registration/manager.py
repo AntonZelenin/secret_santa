@@ -22,8 +22,11 @@ def create_user(email: str) -> User:
         return user
 
     user = User.objects.create(email=email, username=email, date_joined=datetime.now(timezone.utc))
-
-    _send_verification_code(user)
+    try:
+        send_verification_code(user)
+    except Exception:
+        user.delete()
+        raise
 
     return user
 
@@ -37,16 +40,16 @@ def resend_verification_code(user_id: int) -> User:
         )
 
     if not _can_send_verification_code(user.email):
-        raise EmailRegistrationException('Please try in a minute')
+        raise VerificationCodeException('Please try in a minute')
 
     _cleanup_existing_code(user.email)
 
-    _send_verification_code(user)
+    send_verification_code(user)
 
     return user
 
 
-def _send_verification_code(user: User):
+def send_verification_code(user: User):
     now = datetime.now(timezone.utc)
     code = tools.helpers.generate_6_digit_code()
 
@@ -62,16 +65,14 @@ def _send_verification_code(user: User):
     except Exception as e:
         logger_.error(e)
 
-        user.delete()
         # todo users should no get such a message
-        raise Exception('Failed to save the verification code')
+        raise Exception('Failed to create the verification code')
 
     try:
         registration.verification.send_verification_code(user.email, 'some random code')
     except Exception as e:
-        user.delete()
         verification_code.delete()
-        raise EmailRegistrationException(e)
+        raise VerificationCodeException(e)
 
 
 def _can_send_verification_code(email: str) -> bool:
@@ -165,4 +166,8 @@ def get_next_step(current_step: str) -> Optional[str]:
 
 
 class EmailRegistrationException(Exception):
+    pass
+
+
+class VerificationCodeException(Exception):
     pass
