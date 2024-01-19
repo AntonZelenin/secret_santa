@@ -1,14 +1,11 @@
-from typing import List
+def outer_function():
+    outer_var = 10
 
-from tools.types import Err, Ok
+    def inner_function():
+        nonlocal outer_var
+        outer_var += 1
 
+    inner_function()
+    print(outer_var)  # Output: 11
 
-def foo():
-    return Err('foo')
-
-
-match foo():
-    case Err(error):
-        print(error)
-    case Ok():
-        print('ok')
+outer_function()

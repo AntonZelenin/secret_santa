@@ -17,20 +17,37 @@ def create_user(email: str) -> User:
             'This email is already registered. Please use a different email address or sign in'
         )
 
-    existing_user = repository.get_user_by_email(email)
-    if existing_user:
-        existing_code = _get_existing_code(existing_user)
-        if existing_code:
-            if existing_code.resend_at < datetime.now(timezone.utc):
-                existing_code.delete()
-            else:
-                raise EmailRegistrationException('Please try in a minute')
+    if user := repository.get_user_by_email(email):
+        resend_verification_code(user.id)
+        return user
 
+    user = User.objects.create(email=email, username=email, date_joined=datetime.now(timezone.utc))
+
+    _send_verification_code(user)
+
+    return user
+
+
+def resend_verification_code(user_id: int) -> User:
+    user = User.objects.get(id=user_id)
+
+    if _is_user_already_registered(user.email):
+        raise EmailRegistrationException(
+            'This email is already registered. Please use a different email address or sign in'
+        )
+
+    if not _can_send_verification_code(user.email):
+        raise EmailRegistrationException('Please try in a minute')
+
+    _cleanup_existing_code(user.email)
+
+    _send_verification_code(user)
+
+    return user
+
+
+def _send_verification_code(user: User):
     now = datetime.now(timezone.utc)
-    if existing_user:
-        user = existing_user
-    else:
-        user = User.objects.create(email=email, username=email, date_joined=now)
     code = tools.helpers.generate_6_digit_code()
 
     try:
@@ -50,13 +67,30 @@ def create_user(email: str) -> User:
         raise Exception('Failed to save the verification code')
 
     try:
-        registration.verification.send_verification_code(email, 'some random code')
+        registration.verification.send_verification_code(user.email, 'some random code')
     except Exception as e:
         user.delete()
         verification_code.delete()
         raise EmailRegistrationException(e)
 
-    return user
+
+def _can_send_verification_code(email: str) -> bool:
+    """
+    Verification code can be sent either if it's a new user that doesn't exist yet
+    or if resend cooldown has passed
+    """
+
+    if user := repository.get_user_by_email(email):
+        existing_code = repository.get_email_verification_code(user)
+        return existing_code and existing_code.resend_at < datetime.now(timezone.utc)
+
+    return True
+
+
+def _cleanup_existing_code(email: str):
+    if user := repository.get_user_by_email(email):
+        if verification_code := repository.get_email_verification_code(user):
+            verification_code.delete()
 
 
 def check_code(user_id: int, code: str) -> Result[bool]:
@@ -107,13 +141,6 @@ def create_set_username_token(user_id: int) -> SetUsernameToken:
     set_username_token.save()
 
     return set_username_token
-
-
-def _get_existing_code(user: User) -> Optional[EmailVerificationCode]:
-    try:
-        return EmailVerificationCode.objects.get(user=user)
-    except EmailVerificationCode.DoesNotExist:
-        return None
 
 
 def _is_user_already_registered(email: str) -> bool:

@@ -66,19 +66,19 @@ def verify_email(request: HttpRequest) -> JsonResponse:
 def resend_email_verification_code(request: HttpRequest) -> HttpResponse:
     current_step = registration.constants.RESEND_VERIFICATION_CODE
 
-    res = srl.registration.EmailSerializer(data=helpers.load_json(request))
+    res = srl.registration.ResendEmailVerificationCodeSerializer(data=helpers.load_json(request))
     if res.is_valid():
-        email_ = res.validated_data['email']
+        user_id = res.validated_data['user_id']
     else:
         return ErrJsonResponse(res.errors, status=400)
 
     try:
-        user = registration.manager.create_user(email_)
+        registration.manager.resend_verification_code(user_id)
     except registration.manager.EmailRegistrationException as e:
-        return ErrJsonResponse({'registration': str(e)}, status=400)
+        return ErrJsonResponse({'verification_code': str(e)}, status=400)
 
     return JsonResponse({
-        'user_id': user.id,
+        'user_id': user_id,
         'next_step': registration.manager.get_next_step(current_step),
     })
 
