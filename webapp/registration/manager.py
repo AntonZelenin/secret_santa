@@ -99,7 +99,8 @@ def check_code(user_id: int, code: str) -> Result[bool]:
     try:
         user = User.objects.get(id=user_id)
         code_obj = EmailVerificationCode.objects.get(user=user)
-        # todo
+        # todo bring back this check
+        # todo first check if code is expired
         # if code_obj.code == code:
         if '000000' == code:
             if code_obj.expires_at > datetime.now(timezone.utc):
