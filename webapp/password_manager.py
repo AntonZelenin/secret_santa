@@ -1,11 +1,9 @@
-import logging
-
 from django.contrib.auth.tokens import default_token_generator
 
-from tools import email_sender
+from tools import email_sender, logger
 from webapp.models import User
 
-logger = logging.getLogger(__name__)
+logger = logger.get_logger(__name__)
 
 
 def generate_password_reset_token(user_id: int) -> str:

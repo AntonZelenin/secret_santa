@@ -2,7 +2,7 @@ from django.http import HttpRequest, JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from tools import helpers
+from tools import helpers, logger
 from tools.types import Ok, Err, ErrJsonResponse
 from webapp import registration, repository, serializers as srl, password_manager
 from webapp.models import User, SetUsernameToken

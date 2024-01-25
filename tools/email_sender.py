@@ -1,6 +1,6 @@
 from __future__ import print_function
 import base64
-import logging
+import logger
 import os.path
 from email.mime.text import MIMEText
 from googleapiclient.discovery import build
@@ -13,7 +13,7 @@ SCOPES = ['https://mail.google.com/']
 TOKEN_FILE = os.path.join(os.path.expanduser('~'), '.credentials', 'gmail_token.json')
 CLIENT_SECRET_FILE = os.path.join(os.path.expanduser('~'), '.credentials', 'gmail_client_secret.json')
 
-logger = logging.getLogger(__name__)
+logger_ = logger.get_logger(__name__)
 
 
 def send(recipient_email: str, subject: str, message_text: str):
