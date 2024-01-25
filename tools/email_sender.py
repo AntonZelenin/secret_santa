@@ -1,12 +1,13 @@
 from __future__ import print_function
 import base64
-import logger
 import os.path
 from email.mime.text import MIMEText
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+
+from tools import logger
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://mail.google.com/']
