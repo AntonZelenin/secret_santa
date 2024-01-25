@@ -4,7 +4,6 @@ import random
 from django.http import HttpRequest
 
 
-# todo delete?
 def load_json(request: HttpRequest) -> dict | list:
     if not request.body:
         return {}

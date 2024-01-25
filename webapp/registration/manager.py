@@ -51,10 +51,14 @@ def resend_verification_code(user_id: int) -> User:
 
 def send_verification_code(user: User):
     now = datetime.now(timezone.utc)
-    code = tools.helpers.generate_6_digit_code()
 
     try:
-        verification_code = EmailVerificationCode.objects.create(
+        code = registration.verification.send_verification_code(user.email)
+    except Exception as e:
+        raise VerificationCodeException(e)
+    
+    try:
+        EmailVerificationCode.objects.create(
             user=user,
             code=code,
             created_at=now,
@@ -68,12 +72,6 @@ def send_verification_code(user: User):
         # todo users should no get such a message
         raise Exception('Failed to create the verification code')
 
-    try:
-        registration.verification.send_verification_code(user.email, 'some random code')
-    except Exception as e:
-        verification_code.delete()
-        raise VerificationCodeException(e)
-
 
 def _can_send_verification_code(email: str) -> bool:
     """
@@ -83,7 +81,7 @@ def _can_send_verification_code(email: str) -> bool:
 
     if user := repository.get_user_by_email(email):
         existing_code = repository.get_email_verification_code(user)
-        return existing_code and existing_code.resend_at < datetime.now(timezone.utc)
+        return not existing_code or existing_code.resend_at < datetime.now(timezone.utc)
 
     return True
 
@@ -99,10 +97,7 @@ def check_code(user_id: int, code: str) -> Result[bool]:
     try:
         user = User.objects.get(id=user_id)
         code_obj = EmailVerificationCode.objects.get(user=user)
-        # todo bring back this check
-        # todo first check if code is expired
-        # if code_obj.code == code:
-        if '000000' == code:
+        if code_obj.code == code:
             if code_obj.expires_at > datetime.now(timezone.utc):
                 return Ok()
             else:
