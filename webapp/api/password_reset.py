@@ -25,12 +25,18 @@ def request_password_reset(request: HttpRequest) -> HttpResponse:
 @csrf_exempt
 @require_POST
 def reset_password(request: HttpRequest) -> HttpResponse:
-    res = serializers.password.SetPasswordSerializer(data=helpers.load_json(request))
+    res = serializers.password.ResetPasswordSerializer(data=helpers.load_json(request))
 
     if not res.is_valid():
         return ErrJsonResponse(res.errors, status=400)
 
     user_id = res.validated_data['user_id']
     password = res.validated_data['password']
+    set_password_token = res.validated_data['set_password_token']
+
+    if not password_manager.check_password_reset_token(user_id, set_password_token):
+        # todo what is a good message?
+        return ErrJsonResponse({'password_token': 'Invalid password reset token'}, status=400)
+
     # todo error handling
     password_manager.set_password(user_id, password)

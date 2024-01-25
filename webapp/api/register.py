@@ -53,7 +53,7 @@ def verify_email(request: HttpRequest) -> JsonResponse:
 
             return JsonResponse({
                 'user_id': user_id,
-                'create_password_token': password_manager.generate_password_reset_token(user_id),
+                'set_password_token': password_manager.generate_password_reset_token(user_id),
                 'next_step': registration.manager.get_next_step(current_step),
             })
         case Err(error):
@@ -93,12 +93,12 @@ def password(request: HttpRequest) -> JsonResponse:
 
     user_id = res.validated_data['user_id']
     password_ = res.validated_data['password']
-    create_password_token = res.validated_data['create_password_token']
+    set_password_token = res.validated_data['set_password_token']
     
     if not repository.user_exists(user_id):
         return ErrJsonResponse({'user_id': 'Invalid user_id'}, status=400)
 
-    if not password_manager.check_password_reset_token(user_id, create_password_token):
+    if not password_manager.check_password_reset_token(user_id, set_password_token):
         # todo what is a good message?
         return ErrJsonResponse({'password_token': 'Invalid password reset token'}, status=400)
 
