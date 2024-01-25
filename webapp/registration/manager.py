@@ -119,12 +119,6 @@ def mark_email_as_verified(user_id: int):
     user.save()
 
 
-def set_password(user_id: int, password: str):
-    user = User.objects.get(id=user_id)
-    user.set_password(password)
-    user.save()
-
-
 def create_set_username_token(user_id: int) -> SetUsernameToken:
     user = User.objects.get(id=user_id)
     now = datetime.now(timezone.utc)

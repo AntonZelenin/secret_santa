@@ -1,11 +1,10 @@
-from django.contrib.auth.tokens import default_token_generator
 from django.http import HttpRequest, JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from tools import helpers
 from tools.types import Ok, Err, ErrJsonResponse
-from webapp import registration, repository, serializers as srl
+from webapp import registration, repository, serializers as srl, password_manager
 from webapp.models import User, SetUsernameToken
 from webapp.registration.manager import EmailRegistrationException, VerificationCodeException
 
@@ -42,12 +41,11 @@ def verify_email(request: HttpRequest) -> JsonResponse:
     current_step = registration.constants.VERIFY_EMAIL
 
     res = srl.registration.EmailVerificationCodeSerializer(data=helpers.load_json(request))
-    if res.is_valid():
-        user_id = res.validated_data['user_id']
-        code = res.validated_data['verification_code']
-    else:
+    if not res.is_valid():
         return ErrJsonResponse(res.errors, status=400)
 
+    user_id = res.validated_data['user_id']
+    code = res.validated_data['verification_code']
     match registration.manager.check_code(user_id, code):
         case Ok():
             registration.manager.delete_email_verification_code(user_id)
@@ -55,7 +53,7 @@ def verify_email(request: HttpRequest) -> JsonResponse:
 
             return JsonResponse({
                 'user_id': user_id,
-                'create_password_token': default_token_generator.make_token(User.objects.get(id=user_id)),
+                'create_password_token': password_manager.generate_password_reset_token(user_id),
                 'next_step': registration.manager.get_next_step(current_step),
             })
         case Err(error):
@@ -89,27 +87,25 @@ def resend_email_verification_code(request: HttpRequest) -> HttpResponse:
 def password(request: HttpRequest) -> JsonResponse:
     current_step = registration.constants.CREATE_PASSWORD
 
-    res = srl.registration.CreatePasswordSerializer(data=helpers.load_json(request))
-    if res.is_valid():
-        user_id = res.validated_data['user_id']
-        password_ = res.validated_data['password']
-        create_password_token = res.validated_data['create_password_token']
-        user = repository.get_user(user_id)
-    else:
+    res = srl.password.SetPasswordSerializer(data=helpers.load_json(request))
+    if not res.is_valid():
         return ErrJsonResponse(res.errors, status=400)
 
-    if user is None:
+    user_id = res.validated_data['user_id']
+    password_ = res.validated_data['password']
+    create_password_token = res.validated_data['create_password_token']
+    
+    if not repository.user_exists(user_id):
         return ErrJsonResponse({'user_id': 'Invalid user_id'}, status=400)
 
-    if not default_token_generator.check_token(user, create_password_token):
+    if not password_manager.check_password_reset_token(user_id, create_password_token):
         # todo what is a good message?
         return ErrJsonResponse({'password_token': 'Invalid password reset token'}, status=400)
 
-    # todo it doesn't hash the password!
-    registration.manager.set_password(user_id, password_)
+    password_manager.set_password(user_id, password_)
 
     return JsonResponse({
-        'user_id': user.id,
+        'user_id': user_id,
         'create_username_token': registration.manager.create_set_username_token(user_id).token,
         'next_step': registration.manager.get_next_step(current_step),
     })
@@ -121,14 +117,14 @@ def username(request: HttpRequest) -> HttpResponse:
     current_step = registration.constants.CREATE_USERNAME
 
     res = srl.registration.CreateUsernameSerializer(data=helpers.load_json(request))
-    if res.is_valid():
-        user_id = res.validated_data['user_id']
-        username_ = res.validated_data['username']
-        create_username_token = res.validated_data['create_username_token']
-        user = User.objects.get(id=user_id)
-        set_username_token = SetUsernameToken.objects.get(user=user)
-    else:
+    if not res.is_valid():
         return ErrJsonResponse(res.errors, status=400)
+
+    user_id = res.validated_data['user_id']
+    username_ = res.validated_data['username']
+    create_username_token = res.validated_data['create_username_token']
+    user = User.objects.get(id=user_id)
+    set_username_token = SetUsernameToken.objects.get(user=user)
 
     if create_username_token == set_username_token.token:
         set_username_token.delete()

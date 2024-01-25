@@ -10,6 +10,10 @@ def get_user(user_id: int) -> Optional[User]:
         return None
 
 
+def user_exists(user_id: int) -> bool:
+    return get_user(user_id) is not None
+
+
 def get_user_by_email(email: str) -> Optional[User]:
     try:
         return User.objects.get(email=email)

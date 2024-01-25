@@ -14,12 +14,6 @@ class EmailVerificationCodeSerializer(serializers.Serializer):
     verification_code = serializers.CharField()
 
 
-class CreatePasswordSerializer(serializers.Serializer):
-    user_id = serializers.IntegerField()
-    password = serializers.CharField(min_length=8, max_length=64)
-    create_password_token = serializers.CharField()
-
-
 class CreateUsernameSerializer(serializers.Serializer):
     user_id = serializers.IntegerField()
     username = serializers.CharField(max_length=150)
