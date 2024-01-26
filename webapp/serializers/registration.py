@@ -15,6 +15,4 @@ class EmailVerificationCodeSerializer(serializers.Serializer):
 
 
 class CreateUsernameSerializer(serializers.Serializer):
-    user_id = serializers.IntegerField()
     username = serializers.CharField(max_length=150)
-    create_username_token = serializers.CharField()

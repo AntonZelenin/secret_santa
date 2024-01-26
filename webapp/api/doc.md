@@ -26,7 +26,9 @@ Response:
 
 HTTP status code 200
 ```json
-{}
+{
+  "next_step": "string"
+}
 ```
 
 HTTP status code 400
@@ -53,7 +55,9 @@ Response:
 
 HTTP status code 200
 ```json
-{}
+{
+   "next_step": "string"
+}
 ```
 
 HTTP status code 400
@@ -83,7 +87,8 @@ Response:
 HTTP status code 200
 ```json
 {
-    "set_password_token": "string"
+    "set_password_token": "string",
+    "next_step": "string"
 }
 ```
 
@@ -98,14 +103,14 @@ HTTP status code 400
 
 Supported methods: POST
 
-Creates a password for the user with the given `set_password_token`. Returns a `create_username_token` that should be used to create a username for the user.
+Creates a password for the user with the given `set_password_token`.
 
 Request:
 ```json
 {
-    "user_id": "string",
     "set_password_token": "string",
-    "password": "string"
+    "password": "string",
+    "password_confirmation": "string"
 }
 ```
 
@@ -113,9 +118,7 @@ Response:
 
 HTTP status code 200
 ```json
-{
-    "create_username_token": "string"
-}
+{}
 ```
 
 HTTP status code 400
@@ -129,12 +132,13 @@ HTTP status code 400
 
 Supported methods: POST
 
-Creates a username for the user with the given `create_username_token`.
+Requires login.
+
+Creates a username for the user.
 
 Request:
 ```json
 {
-    "create_username_token": "string",
     "username": "string"
 }
 ```
@@ -142,7 +146,9 @@ Request:
 Response:
 HTTP status code 200
 ```json
-{}
+{
+    "next_step": "string"
+}
 ```
 
 HTTP status code 400

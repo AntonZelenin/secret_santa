@@ -3,9 +3,8 @@ from contextlib import suppress
 from datetime import timedelta, datetime, timezone
 from typing import Optional
 
-import tools.helpers
 from tools.types import Result, Ok, Err
-from webapp.models import User, EmailVerificationCode, SetUsernameToken
+from webapp.models import User, EmailVerificationCode
 from webapp import registration, repository
 
 logger_ = logging.getLogger(__name__)
@@ -97,13 +96,12 @@ def check_code(user_id: int, code: str) -> Result[bool]:
     try:
         user = User.objects.get(id=user_id)
         code_obj = EmailVerificationCode.objects.get(user=user)
-        if code_obj.code == code:
-            if code_obj.expires_at > datetime.now(timezone.utc):
-                return Ok()
-            else:
-                return Err('The code is expired')
-        else:
+        if code_obj.code != code:
             return Err('Invalid code')
+        if code_obj.expires_at > datetime.now(timezone.utc):
+            return Ok()
+        else:
+            return Err('The code is expired')
     except (EmailVerificationCode.DoesNotExist, User.DoesNotExist):
         return Err('Invalid code')
 
@@ -117,21 +115,6 @@ def mark_email_as_verified(user_id: int):
     user = User.objects.get(id=user_id)
     user.email_verified = True
     user.save()
-
-
-def create_set_username_token(user_id: int) -> SetUsernameToken:
-    user = User.objects.get(id=user_id)
-    now = datetime.now(timezone.utc)
-
-    set_username_token = SetUsernameToken(
-        user=user,
-        token=tools.helpers.generate_random_string(),
-        created_at=now,
-        expires_at=now + timedelta(minutes=10),
-    )
-    set_username_token.save()
-
-    return set_username_token
 
 
 def _is_user_already_registered(email: str) -> bool:

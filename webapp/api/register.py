@@ -1,17 +1,20 @@
+from django.contrib.auth import authenticate, login
 from django.http import HttpRequest, JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from rest_framework.authtoken.models import Token
+from rest_framework.decorators import permission_classes, api_view
+from rest_framework.permissions import IsAuthenticated
 
-from tools import helpers, logger
+from tools import helpers
 from tools.types import Ok, Err, ErrJsonResponse
 from webapp import registration, repository, serializers as srl, password_manager
-from webapp.models import User, SetUsernameToken
+from webapp.models import User
 from webapp.registration.manager import EmailRegistrationException, VerificationCodeException
 
 
 # todo why csrf_exempt, remove?
 @csrf_exempt
-@require_POST
+@api_view(['POST'])
 def email(request: HttpRequest) -> HttpResponse:
     """
     Creates a tmp user with an email and sends a verification code to the email
@@ -36,7 +39,7 @@ def email(request: HttpRequest) -> HttpResponse:
 
 
 @csrf_exempt
-@require_POST
+@api_view(['POST'])
 def verify_email(request: HttpRequest) -> JsonResponse:
     current_step = registration.constants.VERIFY_EMAIL
 
@@ -61,7 +64,7 @@ def verify_email(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_exempt
-@require_POST
+@api_view(['POST'])
 def resend_email_verification_code(request: HttpRequest) -> HttpResponse:
     current_step = registration.constants.RESEND_VERIFICATION_CODE
 
@@ -83,7 +86,7 @@ def resend_email_verification_code(request: HttpRequest) -> HttpResponse:
 
 
 @csrf_exempt
-@require_POST
+@api_view(['POST'])
 def password(request: HttpRequest) -> JsonResponse:
     current_step = registration.constants.CREATE_PASSWORD
 
@@ -94,8 +97,9 @@ def password(request: HttpRequest) -> JsonResponse:
     user_id = res.validated_data['user_id']
     password_ = res.validated_data['password']
     set_password_token = res.validated_data['set_password_token']
-    
+
     if not repository.user_exists(user_id):
+        # todo are you sure you want to tell that user with this id does not exist?
         return ErrJsonResponse({'user_id': 'Invalid user_id'}, status=400)
 
     if not password_manager.check_password_reset_token(user_id, set_password_token):
@@ -104,15 +108,29 @@ def password(request: HttpRequest) -> JsonResponse:
 
     password_manager.set_password(user_id, password_)
 
-    return JsonResponse({
-        'user_id': user_id,
-        'create_username_token': registration.manager.create_set_username_token(user_id).token,
-        'next_step': registration.manager.get_next_step(current_step),
-    })
+    db_user = User.objects.get(id=user_id)
+
+    user = authenticate(username=db_user.email, password=password_)
+    if user is not None:
+        login(request, user)
+        token, _ = Token.objects.get_or_create(user=user)
+
+        return JsonResponse({
+            'key': token.key,
+            'next_step': registration.manager.get_next_step(current_step),
+        })
+    else:
+        return ErrJsonResponse(
+            {
+                'login': 'Failed to login with the new password',
+            },
+            status=401,
+        )
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @csrf_exempt
-@require_POST
 def username(request: HttpRequest) -> HttpResponse:
     current_step = registration.constants.CREATE_USERNAME
 
@@ -120,23 +138,13 @@ def username(request: HttpRequest) -> HttpResponse:
     if not res.is_valid():
         return ErrJsonResponse(res.errors, status=400)
 
-    user_id = res.validated_data['user_id']
     username_ = res.validated_data['username']
-    create_username_token = res.validated_data['create_username_token']
-    user = User.objects.get(id=user_id)
-    set_username_token = SetUsernameToken.objects.get(user=user)
-
-    if create_username_token == set_username_token.token:
-        set_username_token.delete()
-    else:
-        # todo what is a good message?
-        return ErrJsonResponse({'username_token': 'Invalid create_username_token'}, status=400)
+    user = request.user
 
     user.nickname = username_
     user.finished_registration = True
     user.save()
 
     return JsonResponse({
-        'user_id': user.id,
         'next_step': registration.manager.get_next_step(current_step),
     })

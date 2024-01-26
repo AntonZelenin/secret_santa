@@ -26,10 +26,3 @@ class EmailVerificationCode(models.Model):
     created_at = models.DateTimeField()
     resend_at = models.DateTimeField()
     expires_at = models.DateTimeField()
-
-
-class SetUsernameToken(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    token = models.CharField(max_length=128, unique=True)
-    created_at = models.DateTimeField()
-    expires_at = models.DateTimeField()
