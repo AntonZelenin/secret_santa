@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 
 # Create your models here.
 class User(AbstractUser):
+    nickname = models.CharField(max_length=150, null=True)
     email_verified = models.BooleanField(default=False)
     finished_registration = models.BooleanField(default=False)
     # google_id = models.CharField(max_length=128, null=True)

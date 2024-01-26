@@ -132,7 +132,7 @@ def username(request: HttpRequest) -> HttpResponse:
         # todo what is a good message?
         return ErrJsonResponse({'username_token': 'Invalid create_username_token'}, status=400)
 
-    user.username = username_
+    user.nickname = username_
     user.finished_registration = True
     user.save()
 
